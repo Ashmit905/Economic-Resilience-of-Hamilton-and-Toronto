@@ -1,0 +1,60 @@
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8080:8080"
+    environment:
+      - DB_ADDRESS=jdbc:mysql://database:3306
+      - DB_DATABASE=template_db
+      - DB_USER=root
+      - DB_PASSWORD=pwd
+      - SONAR_BACKEND_TOKEN=Sqp_c626c3b95d77022c4a1977dead8460cee1e37f01
+    networks:
+      - backend-database
+      - backend-frontend
+
+  database:
+    build: ./database
+    environment:
+      - MYSQL_ROOT_PASSWORD=pwd
+      - MYSQL_DATABASE=template_db
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    networks:
+      - backend-database
+      - ingester-database
+    ports:
+      - "3306:3306"
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - BACKEND_PROXY=http://backend:8080
+    volumes:
+      - ./frontend:/usr/src/app  # Mounts the local frontend directory to /usr/src/app in the container
+      - /usr/src/app/node_modules  # Ensures node_modules is not overwritten by the local directory
+    networks:
+      - backend-frontend
+    
+  ingester:
+    build: ./ingester
+    environment:
+      - DB_HOST=database
+      - DB_PORT=3306
+      - DB_DATABASE=template_db
+      - DB_USER=root
+      - DB_PASSWORD=pwd
+    depends_on:
+      - database
+    networks:
+      - ingester-database
+
+volumes:
+  mariadb_data:
+
+networks:
+  backend-database:
+  backend-frontend:
+  ingester-database:

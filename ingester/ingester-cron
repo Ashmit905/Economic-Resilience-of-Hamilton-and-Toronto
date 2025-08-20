@@ -1,0 +1,2 @@
+0 0 * * * ingester/HousingIngester.py >> /var/log/cron.log 2>&1
+
